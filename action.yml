@@ -1,0 +1,45 @@
+name: 'UiPath Pack'
+description: 'Analyzes and packs all UiPath projects within the repository it runs in. Analyze uses UiPath Workflow Analyzer and will cause the job to stop on Rule Violationes.'
+inputs:
+  orchestratorUrl: 
+    description: 'Orchestrator instance URL'
+    required: true
+  orchestratorTenant:
+    description: 'Tenant on the Orchestrator instance'
+    required: true
+  orchestratorFolder:
+    description: 'Folder path in modern folder setup'
+    required: true
+  orchestratorApplicationId:
+    description: 'Orchestrator Application ID for external applicaiton in Orchestrator'
+    required: true
+  orchestratorApplicationSecret:
+    description: 'Application Secret for external application in Orchestrator'
+    required: true
+  orchestratorApplicationScope:
+    description: 'Application scope for determining accesses of External Application'
+    required: true
+  orchestratorLogicalName:
+    description: 'Logical name for Orchestrator instance'
+    required: true
+
+
+runs:
+  using: "composite"
+  steps:
+    - name: Analyze
+      shell: powershell
+      run: |
+        $analysisFailed = 0
+        foreach($project in Get-ChildItem -Path ${{ github.workspace }} -Recurse -Filter project.json -File)
+        {
+          & uipcli package analyze "$($project.FullName)" --stopOnRuleViolation --orchestratorUrl ${{ inputs.orchestratorUrl }} --orchestratorTenant ${{ inputs.OrchestratorTenant }} --orchestratorAccountForApp ${{ inputs.orchestratorLogicalName }} --orchestratorApplicationId "${{ inputs.orchestratorApplicationId }}" --orchestratorApplicationSecret "${{ inputs.orchestratorApplicationSecret }}" --orchestratorApplicationScope "${{ inputs.orchestratorApplicationScope }}" --orchestratorFolder "${{ inputs.orchestratorFolder }}"
+          if($LASTEXITCODE -ne 0)
+          {
+            $analysisFailed = 1
+          }
+        }
+        if($analysisFailed -ne 0)
+        {
+          throw "Workflow analysis failed"
+        }

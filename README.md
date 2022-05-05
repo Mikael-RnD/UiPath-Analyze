@@ -1,5 +1,5 @@
 # UiPath-Analyze
-Runs workflow analysis with stopOnErrors enabled for all UiPath projects in a GitHub repository.
+Runs workflow analysis with stopOnRuleViolation enabled for all UiPath projects in a GitHub repository.
 
 Example usage:
 

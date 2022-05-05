@@ -22,7 +22,10 @@ inputs:
   orchestratorLogicalName:
     description: 'Logical name for Orchestrator instance'
     required: true
-
+  rulesConfigFile:
+    description: 'Path to a RulesConfig.json for customized workflow analysis rules'
+    required: false
+    default: 'none'
 
 runs:
   using: "composite"
@@ -31,6 +34,7 @@ runs:
       shell: powershell
       run: |
         $analysisFailed = 0
+        Remove-Item ${{ github.workspace }}\.github
         foreach($project in Get-ChildItem -Path ${{ github.workspace }} -Recurse -Filter project.json -File)
         {
           & uipcli package analyze "$($project.FullName)" --stopOnRuleViolation --orchestratorUrl ${{ inputs.orchestratorUrl }} --orchestratorTenant ${{ inputs.OrchestratorTenant }} --orchestratorAccountForApp ${{ inputs.orchestratorLogicalName }} --orchestratorApplicationId "${{ inputs.orchestratorApplicationId }}" --orchestratorApplicationSecret "${{ inputs.orchestratorApplicationSecret }}" --orchestratorApplicationScope "${{ inputs.orchestratorApplicationScope }}" --orchestratorFolder "${{ inputs.orchestratorFolder }}"

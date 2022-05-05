@@ -27,3 +27,11 @@ jobs:
       - uses: Mikael-RnD/setup-uipath@main
       - run: ls
       - uses: ./
+        with:
+          orchestratorUrl: "https://cloud.uipath.com/"
+          orchestratorTenant: ${{ secrets.UIPATH_TENANT }}
+          orchestratorFolder: Shared
+          orchestratorApplicationId: ${{ secrets.UIPATH_APP_ID }}
+          orchestratorApplicationSecret: ${{ secrets.UIPATH_APP_SECRET }}
+          orchestratorApplicationScope: ${{ secrets.UIPATH_APP_SCOPE }} 
+          orchestratorLogicalName: ${{ secrets.UIPATH_ORGANIZATION_ID }}

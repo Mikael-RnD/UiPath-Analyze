@@ -22,6 +22,10 @@ inputs:
   orchestratorLogicalName:
     description: 'Logical name for Orchestrator instance'
     required: true
+  rulesConfigFile:
+    description: 'Path to a RulesConfig.json for customized workflow analysis rules'
+    required: false
+    default: 'none'
 
 
 runs:

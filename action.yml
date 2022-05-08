@@ -40,7 +40,7 @@ runs:
         $RulesConfigPath = Join-Path $env:LOCALAPPDATA -ChildPath "\UiPath\Rules\RuleConfig.json"
         if(Test-Path $RulesConfigPath)
         {
-          if(${{ inputs.rulesConfigFile }} ne none)
+          if(${{ inputs.rulesConfigFile }} ne 'none')
           {
             Copy-Item -Path ${{ inputs.rulesConfigFile }} -Destination $RulesConfigPath -Force
             Write-Host $RulesConfigPath exists: 

@@ -4,7 +4,6 @@ inputs:
   projectFilePaths:
     description: 'Used for passing explicit paths to project files to perform analysis. Can be used as multi-line inputs'
     required: false
-    default: '*'
   orchestratorUrl: 
     description: 'Orchestrator instance URL'
     required: true
@@ -51,7 +50,7 @@ runs:
             Test-Path $RulesConfigPath
           }
         }
-        if(${{ inputs.projectFilePaths }} ne '*') 
+        if([string]::IsNullOrEmpty("${{ inputs.projectFilePaths }}")) 
         {
           Write-Host "Getting full path for files given as inputs"
           $projectJsonFiles = ${{ inputs.projectFilePaths }} -split "`r`n"

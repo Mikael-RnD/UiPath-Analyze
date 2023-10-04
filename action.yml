@@ -4,7 +4,7 @@ inputs:
   projectFilePaths:
     description: 'Used for passing explicit paths to project files to perform analysis. Can be used as multi-line inputs'
     required: false
-    default: *
+    default: '*'
   orchestratorUrl: 
     description: 'Orchestrator instance URL'
     required: true

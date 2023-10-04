@@ -49,7 +49,7 @@ runs:
         }
         foreach($project in Get-ChildItem -Path ${{ github.workspace }} -Recurse -Filter project.json -File)
         {
-          & uipcli package analyze "$($project.FullName)" --stopOnRuleViolation --orchestratorUrl ${{ inputs.orchestratorUrl }} --orchestratorTenant ${{ inputs.OrchestratorTenant }} --orchestratorAccountForApp ${{ inputs.orchestratorLogicalName }} --orchestratorApplicationId "${{ inputs.orchestratorApplicationId }}" --orchestratorApplicationSecret "${{ inputs.orchestratorApplicationSecret }}" --orchestratorApplicationScope "${{ inputs.orchestratorApplicationScope }}" --orchestratorFolder "${{ inputs.orchestratorFolder }}"
+          & uipcli package analyze "$($project.FullName)" --stopOnRuleViolation --analyzerTraceLevel "Error" --orchestratorUrl ${{ inputs.orchestratorUrl }} --orchestratorTenant ${{ inputs.OrchestratorTenant }} --orchestratorAccountForApp ${{ inputs.orchestratorLogicalName }} --orchestratorApplicationId "${{ inputs.orchestratorApplicationId }}" --orchestratorApplicationSecret "${{ inputs.orchestratorApplicationSecret }}" --orchestratorApplicationScope "${{ inputs.orchestratorApplicationScope }}" --orchestratorFolder "${{ inputs.orchestratorFolder }}"
           if($LASTEXITCODE -ne 0)
           {
             $analysisFailed = 1

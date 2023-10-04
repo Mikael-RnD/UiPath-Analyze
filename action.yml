@@ -1,6 +1,9 @@
 name: 'UiPath Pack'
 description: 'Analyzes and packs all UiPath projects within the repository it runs in. Analyze uses UiPath Workflow Analyzer and will cause the job to stop on Rule Violationes.'
 inputs:
+  projectFilePaths:
+    description: 'Used for passing explicit paths to project files to perform analysis. Can be used as multi-line inputs'
+    required: false
   orchestratorUrl: 
     description: 'Orchestrator instance URL'
     required: true
@@ -47,7 +50,19 @@ runs:
             Test-Path $RulesConfigPath
           }
         }
-        foreach($project in Get-ChildItem -Path ${{ github.workspace }} -Recurse -Filter project.json -File)
+        if([string]::IsNullOrEmpty("${{ inputs.projectFilePaths }}")) 
+        {
+          Write-Host "Scanning full repository directory for project.json files"
+          $projectJsonFiles = Get-ChildItem -Path ${{ github.workspace }} -Recurse -Filter project.json -File
+        } 
+        else 
+        {
+          Write-Host "Getting full path for files given as inputs"
+          $projectJsonFiles = ${{ inputs.projectFilePaths }} -split "`r`n"
+          $projectJsonFiles | Resolve-Path
+          $projectJsonFiles | Get-ChildItem -File
+        }
+        foreach($project in $projectJsonFiles)
         {
           & uipcli package analyze "$($project.FullName)" --stopOnRuleViolation --analyzerTraceLevel "Error" --orchestratorUrl ${{ inputs.orchestratorUrl }} --orchestratorTenant ${{ inputs.OrchestratorTenant }} --orchestratorAccountForApp ${{ inputs.orchestratorLogicalName }} --orchestratorApplicationId "${{ inputs.orchestratorApplicationId }}" --orchestratorApplicationSecret "${{ inputs.orchestratorApplicationSecret }}" --orchestratorApplicationScope "${{ inputs.orchestratorApplicationScope }}" --orchestratorFolder "${{ inputs.orchestratorFolder }}"
           if($LASTEXITCODE -ne 0)

@@ -52,15 +52,15 @@ runs:
         }
         if([string]::IsNullOrEmpty("${{ inputs.projectFilePaths }}")) 
         {
+          Write-Host "Scanning full repository directory for project.json files"
+          $projectJsonFiles = Get-ChildItem -Path ${{ github.workspace }} -Recurse -Filter project.json -File
+        } 
+        else 
+        {
           Write-Host "Getting full path for files given as inputs"
           $projectJsonFiles = ${{ inputs.projectFilePaths }} -split "`r`n"
           $projectJsonFiles | Resolve-Path
           $projectJsonFiles | Get-ChildItem -File
-        } 
-        else 
-        {
-          Write-Host "Scanning full repository directory for project.json files"
-          $projectJsonFiles = Get-ChildItem -Path ${{ github.workspace }} -Recurse -Filter project.json -File
         }
         foreach($project in $projectJsonFiles)
         {

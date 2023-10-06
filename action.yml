@@ -28,7 +28,7 @@ inputs:
   rulesConfigFile:
     description: 'Path to a RulesConfig.json for customized workflow analysis rules'
     required: false
-    default: 'none'
+    default: ""
 
 runs:
   using: "composite"
@@ -43,7 +43,11 @@ runs:
         $RulesConfigPath = Join-Path $env:LOCALAPPDATA -ChildPath "\UiPath\Rules\RuleConfig.json"
         if(Test-Path $RulesConfigPath)
         {
-          if(${{ inputs.rulesConfigFile }} ne 'none')
+          if([string]::IsNullOrEmpty("${{ inputs.rulesConfigFile }}"))
+          {
+            Write-Host "Custom RulesConfig not provided, using default RulesConfig"
+          }
+          else
           {
             Copy-Item -Path ${{ inputs.rulesConfigFile }} -Destination $RulesConfigPath -Force
             Write-Host $RulesConfigPath exists: 

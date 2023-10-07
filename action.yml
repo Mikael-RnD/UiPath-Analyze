@@ -62,12 +62,14 @@ runs:
         else 
         {
           Write-Host "Getting full path for files given as inputs"
-          $projectJsonFiles = ${{ inputs.projectFilePaths }} -split "`r`n"
-          $projectJsonFiles | Resolve-Path
-          $projectJsonFiles | Get-ChildItem -File
+          $projectJsonFiles = "${{ inputs.projectFilePaths }}".Trim()
+          $projectJsonFiles = $projectJsonFiles -split "`r`n"
+          $projectJsonFiles | Where { -not  [string]::IsNullOrWhiteSpace($_) } | Get-ChildItem -File
         }
-        foreach($project in $projectJsonFiles)
+        foreach($p in $projectJsonFiles)
         {
+          Write-Host "Analyzing project: $p"
+          $project = [System.IO.FileInfo]$p
           & uipcli package analyze "$($project.FullName)" --stopOnRuleViolation --analyzerTraceLevel "Error" --orchestratorUrl ${{ inputs.orchestratorUrl }} --orchestratorTenant ${{ inputs.OrchestratorTenant }} --orchestratorAccountForApp ${{ inputs.orchestratorLogicalName }} --orchestratorApplicationId "${{ inputs.orchestratorApplicationId }}" --orchestratorApplicationSecret "${{ inputs.orchestratorApplicationSecret }}" --orchestratorApplicationScope "${{ inputs.orchestratorApplicationScope }}" --orchestratorFolder "${{ inputs.orchestratorFolder }}"
           if($LASTEXITCODE -ne 0)
           {

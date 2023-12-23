@@ -70,9 +70,10 @@ runs:
         {
           Write-Host "Analyzing project: $p"
           $project = [System.IO.FileInfo]$p
-          
-          & uipcli package analyze "$($project.FullName)" --stopOnRuleViolation `
-          --analyzerTraceLevel "Error" `
+
+          & uipcli package analyze "$($project.FullName)" `
+          --stopOnRuleViolation `
+          --analyzerTraceLevel "Warning" `
           --orchestratorUrl "${{ inputs.orchestratorUrl }}" `
           --orchestratorTenant "${{ inputs.OrchestratorTenant }}" `
           --orchestratorAccountForApp "${{ inputs.orchestratorLogicalName }}" `

@@ -70,8 +70,9 @@ runs:
         {
           Write-Host "Analyzing project: $p"
           $project = [System.IO.FileInfo]$p
+          
           & uipcli package analyze "$($project.FullName)" --stopOnRuleViolation `
-          --analyzerTraceLevel "Error" ` 
+          --analyzerTraceLevel "Error" `
           --orchestratorUrl "${{ inputs.orchestratorUrl }}" `
           --orchestratorTenant "${{ inputs.OrchestratorTenant }}" `
           --orchestratorAccountForApp "${{ inputs.orchestratorLogicalName }}" `
@@ -79,6 +80,7 @@ runs:
           --orchestratorApplicationSecret "${{ inputs.orchestratorApplicationSecret }}" `
           --orchestratorApplicationScope "${{ inputs.orchestratorApplicationScope }}" `
           --orchestratorFolder "${{ inputs.orchestratorFolder }}"
+
           if($LASTEXITCODE -ne 0)
           {
             $analysisFailed = 1

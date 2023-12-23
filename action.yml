@@ -71,7 +71,7 @@ runs:
           Write-Host "Analyzing project: $p"
           $project = [System.IO.FileInfo]$p
 
-          & uipcli package analyze "$($project.FullName)" `
+          uipcli package analyze "$($project.FullName)" `
           --stopOnRuleViolation `
           --analyzerTraceLevel "Info" `
           --orchestratorUrl "${{ inputs.orchestratorUrl }}" `

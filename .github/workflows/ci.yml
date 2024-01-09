@@ -26,6 +26,7 @@ jobs:
       - uses: Mikael-RnD/setup-uipath@v1
       
       - name: 'Analyze with RuleConfig.json input'
+        id: analyze
         uses: ./
         with:
           orchestratorUrl: "https://cloud.uipath.com/"
@@ -36,6 +37,13 @@ jobs:
           orchestratorApplicationScope: ${{ secrets.UIPATH_APP_SCOPE }} 
           orchestratorLogicalName: ${{ secrets.UIPATH_ORGANIZATION_ID }}
           rulesConfigFile: 'RulesConfig.json'
+
+      - run: echo ${{ steps.analyze.outputs.analyzerResultsPath }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: workflow-analyzer-results
+          path: ${{ steps.analyze.outputs.analyzerResultsPath }}
 
   analyze-no-rules-config:
     # The type of runner that the job will run on

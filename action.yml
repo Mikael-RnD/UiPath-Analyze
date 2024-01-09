@@ -29,11 +29,16 @@ inputs:
     description: 'Path to a RulesConfig.json for customized workflow analysis rules'
     required: false
     default: ""
+outputs:
+  analyzerResultsPath:
+    description: 'Folder containing the workflow analysis result files in json format, intended for use cases such as uploading to artifact for review'
+    value: ${{ steps.analyze.outputs.analyzerResultsPath }}
 
 runs:
   using: "composite"
   steps:
-    - name: Analyze
+    - id: analyze
+      name: Analyze
       shell: powershell
       run: |
         $analysisFailed = 0
@@ -66,10 +71,21 @@ runs:
           $projectJsonFiles = $projectJsonFiles -split "`r`n"
           $projectJsonFiles | Where { -not  [string]::IsNullOrWhiteSpace($_) } | Get-ChildItem -File
         }
+
+        $analyzerResultPath = "${{ github.workspace }}\analyzer-results".Trim()
+
+        Write-Output "analyzerResultsPath=$analyzerResultPath" >> $Env:GITHUB_OUTPUT
+        
+        New-Item -ItemType "directory" -Path $analyzerResultPath
+
         foreach($p in $projectJsonFiles)
         {
           Write-Host "Analyzing project: $p"
           $project = [System.IO.FileInfo]$p
+          $projectInfo = Get-Content "$($project.FullName)" | ConvertFrom-Json
+          $projectName = $projectInfo.name 
+          $analyzerResultFile = "$analyzerResultPath\" + $projectName + ".json"
+          Write-Host "Creating result file $analyzerResultFile"
 
           uipcli package analyze "$($project.FullName)" `
             --stopOnRuleViolation `
@@ -80,7 +96,10 @@ runs:
             --orchestratorApplicationId "${{ inputs.orchestratorApplicationId }}" `
             --orchestratorApplicationSecret "${{ inputs.orchestratorApplicationSecret }}" `
             --orchestratorApplicationScope "${{ inputs.orchestratorApplicationScope }}" `
-            --orchestratorFolder "${{ inputs.orchestratorFolder }}"
+            --orchestratorFolder "${{ inputs.orchestratorFolder }}" `
+            --resultPath "$analyzerResultFile"
+
+          Write-Host "Analyzer finished with $projectName"
 
           if($LASTEXITCODE -ne 0)
           {
@@ -91,3 +110,17 @@ runs:
         {
           throw "Workflow analysis failed"
         }
+        
+        $analyzerResultFiles = Get-ChildItem $analyzerResultPath
+        foreach($file in $analyzerResultFiles){
+          Write-Host $file.FullName
+        }
+
+        echo "Workflow analysis results created in path $analyzerResultPath" >> $Env:GITHUB_STEP_SUMMARY
+
+    - id: print_outputs
+      name: Print Outputs
+      if: always()
+      shell: pwsh
+      run:  |
+        echo "analyzerResultsPath: ${{ steps.analyze.outputs.analyzerResultsPath }}"

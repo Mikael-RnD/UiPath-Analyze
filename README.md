@@ -15,3 +15,8 @@ Example usage:
           orchestratorApplicationSecret: # Application Secret for External Application in Orchestrator
           orchestratorApplicationScope: # Scope for the assigned external applicaiton
           orchestratorLogicalName: # Password for basic authentication
+
+## Outputs
+ |Name|Description|
+ |:--|:--|
+ |analyzerResultsPath|A path on the local runner containing the analyzer result json files for all analyzed projects|

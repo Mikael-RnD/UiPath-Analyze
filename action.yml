@@ -89,7 +89,7 @@ runs:
 
           uipcli package analyze "$($project.FullName)" `
             --stopOnRuleViolation `
-            --analyzerTraceLevel "Info" `
+            --analyzerTraceLevel "Warning" `
             --orchestratorUrl "${{ inputs.orchestratorUrl }}" `
             --orchestratorTenant "${{ inputs.OrchestratorTenant }}" `
             --orchestratorAccountForApp "${{ inputs.orchestratorLogicalName }}" `

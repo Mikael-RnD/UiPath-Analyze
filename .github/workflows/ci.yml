@@ -38,9 +38,8 @@ jobs:
           orchestratorLogicalName: ${{ secrets.UIPATH_ORGANIZATION_ID }}
           rulesConfigFile: 'RulesConfig.json'
 
-      - run: echo ${{ steps.analyze.outputs.analyzerResultsPath }}
-
-      - uses: actions/upload-artifact@v4
+      - if: always()
+        uses: actions/upload-artifact@v4
         with:
           name: workflow-analyzer-results
           path: ${{ steps.analyze.outputs.analyzerResultsPath }}

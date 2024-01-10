@@ -33,6 +33,9 @@ outputs:
   analyzerResultsPath:
     description: 'Folder containing the workflow analysis result files in json format, intended for use cases such as uploading to artifact for review'
     value: ${{ steps.analyze.outputs.analyzerResultsPath }}
+  analyzerResultsTable: 
+    description: 'Markdown formatted table containing the workflow analysis results, intended for use cases such as writing to the step summary and sending as a comment to a pull request'
+    value: ${{ steps.parse.outputs.analyzerResultsTable }}
 
 runs:
   using: "composite"
@@ -89,7 +92,7 @@ runs:
 
           uipcli package analyze "$($project.FullName)" `
             --stopOnRuleViolation `
-            --analyzerTraceLevel "Info" `
+            --analyzerTraceLevel "Warning" `
             --orchestratorUrl "${{ inputs.orchestratorUrl }}" `
             --orchestratorTenant "${{ inputs.OrchestratorTenant }}" `
             --orchestratorAccountForApp "${{ inputs.orchestratorLogicalName }}" `
@@ -110,17 +113,43 @@ runs:
         {
           throw "Workflow analysis failed"
         }
-        
-        $analyzerResultFiles = Get-ChildItem $analyzerResultPath
-        foreach($file in $analyzerResultFiles){
-          Write-Host $file.FullName
-        }
 
-        echo "Workflow analysis results created in path $analyzerResultPath" >> $Env:GITHUB_STEP_SUMMARY
-
-    - id: print_outputs
-      name: Print Outputs
+    - id: parse
+      name: Write Step Summary and Parse Results
       if: always()
       shell: pwsh
       run:  |
         echo "analyzerResultsPath: ${{ steps.analyze.outputs.analyzerResultsPath }}"
+        $analyzerResultPath = "${{ steps.analyze.outputs.analyzerResultsPath }}"
+
+        $analyzerResultFiles = Get-ChildItem $analyzerResultPath
+        $analyzerStepSummary = ""
+
+        foreach($file in $analyzerResultFiles){
+          Write-Host $file.FullName
+          
+          $projectName = [System.IO.Path]::GetFileNameWithoutExtension($file.FullName)
+          $analyzerStepSummary += "`n### $projectName`n"
+
+          $analyzerResult = Get-Content "$($file.FullName)" | ConvertFrom-Json
+          $analyzerTable = "|Severity|ErrorCode|RuleName|Description|Recommendation|DocumentationLink|FilePath|"
+          $analyzerTable += "`n|:--|:--|:--|:--|:--|:--|:--|`n"
+
+          for($i = 0; $i -lt $analyzerResult.Length; $i++){
+            $description = "$($analyzerResult[$i].Description.Replace([System.Environment]::NewLine, ''))"
+            $recommendation = "$($analyzerResult[$i].Recommendation.Replace([System.Environment]::NewLine, ''))"
+            $analyzerTable += "| $($analyzerResult[$i].ErrorSeverity) | $($analyzerResult[$i].ErrorCode) | $($analyzerResult[$i].RuleName) | $description | $recommendation | $($analyzerResult[$i].DocumentationLink) | $($analyzerResult[$i].FilePath) |`n"
+          }  
+          $analyzerStepSummary += $analyzerTable
+        }
+
+        echo 'analyzerResultsTable<<EOF' >> $Env:GITHUB_OUTPUT
+        echo "$analyzerStepSummary" >> $Env:GITHUB_STEP_OUTPUT
+        echo EOF >> $Env:GITHUB_OUTPUT
+
+        echo "<details>" >> $Env:GITHUB_STEP_SUMMARY
+        echo "<summary>Workflow Analysis Results</summary>" >> $Env:GITHUB_STEP_SUMMARY
+        echo "" >> $Env:GITHUB_STEP_SUMMARY
+        echo "$analyzerStepSummary" >> $Env:GITHUB_STEP_SUMMARY
+        echo "" >> $Env:GITHUB_STEP_SUMMARY
+        echo "</details>" >> $Env:GITHUB_STEP_SUMMARY

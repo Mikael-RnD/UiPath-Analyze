@@ -29,6 +29,10 @@ inputs:
     description: 'Path to a RulesConfig.json for customized workflow analysis rules'
     required: false
     default: ""
+  ignoredRules:
+    description: 'Comma-separated list of rules to ignore during analysis'
+    required: false
+    default: ""
 outputs:
   analyzerResultsPath:
     description: 'Folder containing the workflow analysis result files in json format, intended for use cases such as uploading to artifact for review'
@@ -75,6 +79,16 @@ runs:
           $projectJsonFiles | Where { -not  [string]::IsNullOrWhiteSpace($_) } | Get-ChildItem -File
         }
 
+        if([string]::IsNullOrEmpty("${{ inputs.ignoredRules }}")) {
+          Write-Host "No ignored rules provided"
+          $ignoredRulesArg = ""
+        }
+        else {
+          Write-Host "Ignoring rules: ${{ inputs.ignoredRules }}"
+          $ignoredRulesArg = "--ignoredRules=""${{ inputs.ignoredRules }}"""
+          Write-Host $ignoredRulesArg
+        }
+
         $analyzerResultPath = "${{ github.workspace }}\analyzer-results".Trim()
 
         Write-Output "analyzerResultsPath=$analyzerResultPath" >> $Env:GITHUB_OUTPUT
@@ -100,7 +114,8 @@ runs:
             --orchestratorApplicationSecret "${{ inputs.orchestratorApplicationSecret }}" `
             --orchestratorApplicationScope "${{ inputs.orchestratorApplicationScope }}" `
             --orchestratorFolder "${{ inputs.orchestratorFolder }}" `
-            --resultPath "$analyzerResultFile"
+            --resultPath "$analyzerResultFile" `
+            $ignoredRulesArg
 
           Write-Host "Analyzer finished with $projectName"
 

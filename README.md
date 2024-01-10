@@ -20,3 +20,4 @@ Example usage:
  |Name|Description|
  |:--|:--|
  |analyzerResultsPath|A path on the local runner containing the analyzer result json files for all analyzed projects|
+|analyzerResultsTable|Markdown formatted table containing the workflow analysis results, intended for use cases such as writing to the step summary and sending as a comment to a pull request|

@@ -151,9 +151,19 @@ runs:
           $analyzerTable += "`n|:--|:--|:--|:--|:--|:--|:--|`n"
 
           for($i = 0; $i -lt $analyzerResult.Length; $i++){
+            if($($analyzerResult[$i].ErrorSeverity) -eq "3"){
+              $errorSeverity = ":information_source: Info"
+            }
+            if($($analyzerResult[$i].ErrorSeverity) -eq "2"){
+              $errorSeverity = ":warning: Warning"
+            }
+            if($($analyzerResult[$i].ErrorSeverity) -eq "1"){
+              $errorSeverity = ":x: Error"
+            }
+
             $description = "$($analyzerResult[$i].Description.Replace([System.Environment]::NewLine, ''))"
             $recommendation = "$($analyzerResult[$i].Recommendation.Replace([System.Environment]::NewLine, ''))"
-            $analyzerTable += "| $($analyzerResult[$i].ErrorSeverity) | $($analyzerResult[$i].ErrorCode) | $($analyzerResult[$i].RuleName) | $description | $recommendation | $($analyzerResult[$i].DocumentationLink) | $($analyzerResult[$i].FilePath) |`n"
+            $analyzerTable += "| $errorSeverity | $($analyzerResult[$i].ErrorCode) | $($analyzerResult[$i].RuleName) | $description | $recommendation | $($analyzerResult[$i].DocumentationLink) | $($analyzerResult[$i].FilePath) |`n"
           }  
           $analyzerStepSummary += $analyzerTable
         }

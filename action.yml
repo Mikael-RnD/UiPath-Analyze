@@ -150,7 +150,8 @@ runs:
           $infoCount = 0
 
           $projectName = [System.IO.Path]::GetFileNameWithoutExtension($file.FullName)
-          $projectSummary = "`n### $projectName`n"
+          $projectHeader = "`n<details>"
+          $projectHeader += "`n<summary>$projectName</summary>`n"
 
           $analyzerResult = Get-Content "$($file.FullName)" | ConvertFrom-Json
           $analyzerResult = $analyzerResult | Sort-Object -Property ErrorSeverity
@@ -176,17 +177,16 @@ runs:
             $analyzerTable += "| $severity | $($analyzerResult[$i].ErrorCode) | $($analyzerResult[$i].RuleName) | $description | $recommendation | $($analyzerResult[$i].DocumentationLink) | $($analyzerResult[$i].FilePath) |`n"
           }
           $projectSummary += "`n - ${errorText}: $errorCount `n - ${warningText}: $warningCount `n - ${infoText}: $infoCount `n"
+          $analyzerStepSummary += $projectHeader
           $analyzerStepSummary += $projectSummary  
           $analyzerStepSummary += "`n$analyzerTable"
+          $analyzerStepSummary += "`n</details>`n"
         }
 
         echo 'analyzerResultsTable<<EOF' >> $Env:GITHUB_OUTPUT
         echo "$analyzerStepSummary" >> $Env:GITHUB_STEP_OUTPUT
         echo EOF >> $Env:GITHUB_OUTPUT
 
-        echo "<details>" >> $Env:GITHUB_STEP_SUMMARY
-        echo "<summary>Workflow Analysis Results</summary>" >> $Env:GITHUB_STEP_SUMMARY
+        echo "## Workflow Analysis Results" >> $Env:GITHUB_STEP_SUMMARY
         echo "" >> $Env:GITHUB_STEP_SUMMARY
         echo "$analyzerStepSummary" >> $Env:GITHUB_STEP_SUMMARY
-        echo "" >> $Env:GITHUB_STEP_SUMMARY
-        echo "</details>" >> $Env:GITHUB_STEP_SUMMARY

@@ -176,7 +176,7 @@ runs:
             $recommendation = "$($analyzerResult[$i].Recommendation.Replace([System.Environment]::NewLine, ''))"
             $analyzerTable += "| $severity | $($analyzerResult[$i].ErrorCode) | $($analyzerResult[$i].RuleName) | $description | $recommendation | $($analyzerResult[$i].DocumentationLink) | $($analyzerResult[$i].FilePath) |`n"
           }
-          $projectSummary += "`n - ${errorText}: $errorCount `n - ${warningText}: $warningCount `n - ${infoText}: $infoCount `n"
+          $projectSummary = "`n - ${errorText}: $errorCount `n - ${warningText}: $warningCount `n - ${infoText}: $infoCount `n"
           $analyzerStepSummary += $projectHeader
           $analyzerStepSummary += $projectSummary  
           $analyzerStepSummary += "`n$analyzerTable"

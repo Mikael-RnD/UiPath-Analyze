@@ -1,5 +1,5 @@
-name: 'UiPath Pack'
-description: 'Analyzes and packs all UiPath projects within the repository it runs in. Analyze uses UiPath Workflow Analyzer and will cause the job to stop on Rule Violationes.'
+name: 'UiPath Analyze'
+description: 'Analyze uses UiPath Workflow Analyzer and will cause the job to stop on Rule Violations.'
 inputs:
   projectFilePaths:
     description: 'Used for passing explicit paths to project files to perform analysis. Can be used as multi-line inputs'

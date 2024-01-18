@@ -173,7 +173,14 @@ runs:
             }
 
             $description = "$($analyzerResult[$i].Description.Replace([System.Environment]::NewLine, ''))"
-            $recommendation = "$($analyzerResult[$i].Recommendation.Replace([System.Environment]::NewLine, ''))"
+            
+            if([string]::IsNullOrEmpty($($analyzerResult[$i].Recommendation))){
+              $recommendation = ""
+            }
+            else{
+              $recommendation = "$($analyzerResult[$i].Recommendation.Replace([System.Environment]::NewLine, ''))"
+            }
+
             $analyzerTable += "| $severity | $($analyzerResult[$i].ErrorCode) | $($analyzerResult[$i].RuleName) | $description | $recommendation | $($analyzerResult[$i].DocumentationLink) | $($analyzerResult[$i].FilePath) |`n"
           }
           $projectSummary = "`n - ${errorText}: $errorCount `n - ${warningText}: $warningCount `n - ${infoText}: $infoCount `n"

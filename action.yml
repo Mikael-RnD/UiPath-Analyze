@@ -139,9 +139,7 @@ runs:
 
         $analyzerResultFiles = Get-ChildItem $analyzerResultPath
         $analyzerStepSummary = ""
-        $infoText = ":information_source: **Info**"
-        $warningText = ":warning: **Warning**"
-        $errorText = ":x: **Error**"
+
         foreach($file in $analyzerResultFiles){
           Write-Host $file.FullName
           
@@ -149,15 +147,15 @@ runs:
           $warningCount = 0
           $infoCount = 0
 
-          $projectName = [System.IO.Path]::GetFileNameWithoutExtension($file.FullName)
-          $projectHeader = "`n<details>"
-          $projectHeader += "`n<summary>$projectName</summary>`n"
+          $infoText = ":information_source: Info"
+          $warningText = ":warning: Warning"
+          $errorText = ":x: Error"
 
           $analyzerResult = Get-Content "$($file.FullName)" | ConvertFrom-Json
           $analyzerResult = $analyzerResult | Sort-Object -Property ErrorSeverity
           $analyzerTable = "|Severity|ErrorCode|RuleName|Description|Recommendation|DocumentationLink|FilePath|"
           $analyzerTable += "`n|:--|:--|:--|:--|:--|:--|:--|`n"
-
+          
           for($i = 0; $i -lt $analyzerResult.Length; $i++){
             if($($analyzerResult[$i].ErrorSeverity) -eq "3"){
               $severity = $infoText
@@ -168,9 +166,17 @@ runs:
               $warningCount++
             }
             if($($analyzerResult[$i].ErrorSeverity) -eq "1"){
-              $severity =  $errorText
+              $severity = $errorText
               $errorCount++
             }
+
+            $infoSummary = "${infoText}: ${infoCount}"
+            $warningSummary = "${warningText}: ${warningCount}"
+            $errorSummary = "${errorText}: ${errorCount}"
+
+            $projectName = [System.IO.Path]::GetFileNameWithoutExtension($file.FullName)
+            $projectHeader = "`n<details>"
+            $projectHeader += "`n<summary>${projectName} -- ${errorSummary} -- ${warningSummary} -- ${infoSummary}</summary>`n"
 
             $description = "$($analyzerResult[$i].Description.Replace([System.Environment]::NewLine, ''))"
             
@@ -183,7 +189,7 @@ runs:
 
             $analyzerTable += "| $severity | $($analyzerResult[$i].ErrorCode) | $($analyzerResult[$i].RuleName) | $description | $recommendation | $($analyzerResult[$i].DocumentationLink) | $($analyzerResult[$i].FilePath) |`n"
           }
-          $projectSummary = "`n - ${errorText}: $errorCount `n - ${warningText}: $warningCount `n - ${infoText}: $infoCount `n"
+          $projectSummary = "`n - ${errorSummary} `n - ${warningSummary} `n - ${infoSummary} `n"
           $analyzerStepSummary += $projectHeader
           $analyzerStepSummary += $projectSummary  
           $analyzerStepSummary += "`n$analyzerTable"

@@ -85,7 +85,7 @@ runs:
         }
         else {
           Write-Host "Ignoring rules: ${{ inputs.ignoredRules }}"
-          $ignoredRulesArg = "--ignoredRules=""${{ inputs.ignoredRules }}"""
+          $ignoredRulesArg = "--ignoredRules '${{ inputs.ignoredRules }}'"
           Write-Host $ignoredRulesArg
         }
 

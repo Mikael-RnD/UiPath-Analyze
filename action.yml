@@ -197,7 +197,7 @@ runs:
         }
 
         echo 'analyzerResultsTable<<EOF' >> $Env:GITHUB_OUTPUT
-        echo "$analyzerStepSummary" >> $Env:GITHUB_STEP_OUTPUT
+        echo $analyzerStepSummary.Trim() >> $Env:GITHUB_OUTPUT
         echo EOF >> $Env:GITHUB_OUTPUT
 
         echo "## Workflow Analysis Results" >> $Env:GITHUB_STEP_SUMMARY

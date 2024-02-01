@@ -3,7 +3,13 @@ Runs [workflow analysis](https://docs.uipath.com/studio/standalone/2023.10/user-
 
 The action adds comments to the GitHub Actions step summary, containing a table of information about the workflow analysis results, and provides the path of a JSON file for workflow analysis results.
 
-**Note:** The current version of this action only works on Windows runners
+**Note:** The current version of this action is only compatible with Windows runners
+
+## Setup
+
+This action requires the following items to be configured:
+- UiPath CLI installed on GitHub Actions Runner. This can be done by running the [setup-uipath action](https://github.com/Mikael-RnD/setup-uipath) before this action
+- [An external application created in Orchestrator](https://docs.uipath.com/automation-cloud/automation-cloud/latest/admin-guide/managing-external-applications) with the access scopes specified in the [UiPath CLI documentation](https://docs.uipath.com/test-suite/automation-cloud/latest/user-guide/executing-tasks-cli). With the credentials passed to this actions input from GitHub Secrets (or other safe credential stores)
 
 ## Example usage
 

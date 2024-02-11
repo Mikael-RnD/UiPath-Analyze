@@ -1,4 +1,5 @@
 # UiPath-Analyze
+
 Runs [workflow analysis](https://docs.uipath.com/studio/standalone/2023.10/user-guide/about-workflow-analyzer) with stopOnRuleViolation enabled for all UiPath projects in a GitHub repository. Built as a wrapper around the UiPath CLI task for [Analyzing a Project](https://docs.uipath.com/test-suite/automation-cloud/latest/user-guide/analyzing-a-project).
 
 The action adds comments to the GitHub Actions step summary, containing a table of information about the workflow analysis results, and provides the path of a JSON file for workflow analysis results.
@@ -8,6 +9,7 @@ The action adds comments to the GitHub Actions step summary, containing a table 
 ## Setup
 
 This action requires the following items to be configured:
+
 - UiPath CLI installed on GitHub Actions Runner. This can be done by running the [setup-uipath action](https://github.com/Mikael-RnD/setup-uipath) before this action
 - [An external application created in Orchestrator](https://docs.uipath.com/automation-cloud/automation-cloud/latest/admin-guide/managing-external-applications) with the access scopes specified in the [UiPath CLI documentation](https://docs.uipath.com/test-suite/automation-cloud/latest/user-guide/executing-tasks-cli). With the credentials passed to this actions input from GitHub Secrets (or other safe credential stores)
 
@@ -17,6 +19,7 @@ This action requires the following items to be configured:
 
 The example below shows a standard use-case for running workflow analysis on all UiPath projects within a repository, authenticating to an Orchestrator instance on UiPath Automation Cloud:
 
+```yml
       # Action for performing workflow analysis on a UiPath project
       - name: UiPath Analyze
         uses: Mikael-RnD/UiPath-Analyze@v0
@@ -26,11 +29,13 @@ The example below shows a standard use-case for running workflow analysis on all
           orchestratorApplicationId: ${{ secrets.ORCHESTRATOR_APP_ID }}
           orchestratorApplicationSecret: ${{ secrets.ORCHESTRATOR_APP_SECRET }}
           orchestratorLogicalName: myorg
+```
 
 ### On-Prem / Automation Suite usage
 
 The example below shows a use-case for running workflow analysis, on a specific project in the repository, while authenticating to an on-prem/Automation Suite instance, and ignoring rules [ST-NMG-002](https://docs.uipath.com/studio/standalone/2023.4/user-guide/st-nmg-002) and [ST-USG-034](https://docs.uipath.com/studio/standalone/2023.4/user-guide/st-usg-034):
 
+```yml
       # Action for performing workflow analysis on a UiPath project
       - name: UiPath Analyze
         uses: Mikael-RnD/UiPath-Analyze@v0
@@ -45,13 +50,14 @@ The example below shows a use-case for running workflow analysis, on a specific 
           orchestratorApplicationScope: "OR.Assets OR.BackgroundTasks OR.Execution OR.Folders OR.Jobs OR.Machines.Read OR.Monitoring OR.Robots.Read OR.Settings.Read OR.TestSets OR.TestSetExecutions OR.TestSetSchedules OR.Users.Read"
           orchestratorLogicalName: myorg
           ignoredRules: "ST-NMG-002,ST-USG-034"
-
+```
 
 ## Inputs
+
 |Name|Description|Required|Default value|
 |:--|:--|:--|:--|
 |**projectFilePaths**|Multiline input containing a list of projects to perform the operations on. If left empty, the action scans for any project.json files in the repository|False|TheProject/project.json|
-|**orchestratorUrl**|Base URL to Orchestrator instance|False|https://cloud.uipath.com/|
+|**orchestratorUrl**|Base URL to Orchestrator instance|False|<https://cloud.uipath.com/>|
 |**orchestratorTenant**|Name of the Orchestrator tenant|True||
 |**orchestratorLogicalName**|Id of the UiPath organization|True||
 |**orchestratorFolder**|The fully qualified name of the Orchestrator folder where processes are deployed to|True||
@@ -62,6 +68,7 @@ The example below shows a use-case for running workflow analysis, on a specific 
 |**ignoredRules**|Comma-separated list of rules to ignore during analysis|False||
 
 ## Outputs
+
 |Name|Description|
 |:--|:--|
 |**analyzerResultsPath**|A path on the local runner containing the analyzer result json files for all analyzed projects|

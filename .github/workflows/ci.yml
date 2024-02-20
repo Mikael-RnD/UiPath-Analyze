@@ -44,7 +44,7 @@ jobs:
           name: workflow-analyzer-results
           path: ${{ steps.analyze.outputs.analyzerResultsPath }}
 
-  analyze-no-rules-config:
+  analyze-with-ignored-rules:
     # The type of runner that the job will run on
     runs-on: windows-latest
 
@@ -63,7 +63,7 @@ jobs:
           orchestratorApplicationSecret: ${{ secrets.UIPATH_APP_SECRET }}
           orchestratorApplicationScope: ${{ secrets.UIPATH_APP_SCOPE }} 
           orchestratorLogicalName: ${{ secrets.UIPATH_ORGANIZATION_ID }}
-          ignoredRules: "ST-SEC-009"
+          ignoredRules: "ST-SEC-009,ST-USG-010,ST-MRD-034"
 
   analyze-with-path-input:
       # The type of runner that the job will run on

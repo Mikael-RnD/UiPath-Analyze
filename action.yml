@@ -42,6 +42,15 @@ outputs:
   analyzerResultsTable: 
     description: 'Markdown formatted table containing the workflow analysis results, intended for use cases such as writing to the step summary and sending as a comment to a pull request'
     value: ${{ steps.parse.outputs.analyzerResultsTable }}
+  infoCount:
+    description: 'Number of informational entries generated during analysis'
+    value: ${{ steps.parse.outputs.infoCount }}
+  warningCount:
+    description: 'Number of warning entries generated during analysis'
+    value: ${{ steps.parse.outputs.warningCount }}
+  errorCount:
+    description: 'Number of error entries generated during analysis'
+    value: ${{ steps.parse.outputs.errorCount }}
 
 runs:
   using: "composite"
@@ -141,6 +150,9 @@ runs:
 
         $analyzerResultFiles = Get-ChildItem $analyzerResultPath
         $analyzerStepSummary = ""
+        $totalErrorCount = 0
+        $totalWarningCount = 0
+        $totalInfoCount = 0
 
         foreach($file in $analyzerResultFiles){
           Write-Host $file.FullName
@@ -196,6 +208,10 @@ runs:
           $analyzerStepSummary += $projectSummary  
           $analyzerStepSummary += "`n$analyzerTable"
           $analyzerStepSummary += "`n</details>`n"
+
+          $totalErrorCount += $errorCount
+          $totalWarningCount += $warningCount
+          $totalInfoCount += $infoCount
         }
 
         echo 'analyzerResultsTable<<EOF' >> $Env:GITHUB_OUTPUT
@@ -205,3 +221,7 @@ runs:
         echo "## Workflow Analysis Results" >> $Env:GITHUB_STEP_SUMMARY
         echo "" >> $Env:GITHUB_STEP_SUMMARY
         echo "$analyzerStepSummary" >> $Env:GITHUB_STEP_SUMMARY
+
+        echo "errorCount=$totalErrorCount" >> $Env:GITHUB_OUTPUT
+        echo "warningCount=$totalWarningCount" >> $Env:GITHUB_OUTPUT
+        echo "infoCount=$totalInfoCount" >> $Env:GITHUB_OUTPUT

@@ -73,3 +73,6 @@ The example below shows a use-case for running workflow analysis, on a specific 
 |:--|:--|
 |**analyzerResultsPath**|A path on the local runner containing the analyzer result json files for all analyzed projects|
 |**analyzerResultsTable**|Markdown formatted table containing the workflow analysis results, intended for use cases such as providing additional details in issues or pull request comments|
+|**infoCount**|Number of informational entries generated during analysis|
+|**warningCount**|Number of warning entries generated during analysis|
+|**errorCount**|Number of error entries generated during analysis|

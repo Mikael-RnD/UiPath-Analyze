@@ -53,7 +53,8 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v4
       - uses: Mikael-RnD/setup-uipath@v1
-      - name: Analyse with ignored rules
+      - id: analyze
+        name: Analyse with ignored rules
         uses: ./
         with:
           orchestratorUrl: "https://cloud.uipath.com/"
@@ -64,6 +65,13 @@ jobs:
           orchestratorApplicationScope: ${{ secrets.UIPATH_APP_SCOPE }} 
           orchestratorLogicalName: ${{ secrets.UIPATH_ORGANIZATION_ID }}
           ignoredRules: "ST-SEC-009,ST-USG-010,ST-MRD-034"
+      
+      - name: Print Outputs
+        run: |
+          echo "Analyzer results: ${{ steps.analyze.outputs.analyzerResultsTable }}"
+          echo "Info count: ${{ steps.analyze.outputs.infoCount }}"
+          echo "Warning count: ${{ steps.analyze.outputs.warningCount }}"
+          echo "Error count: ${{ steps.analyze.outputs.errorCount }}"
 
   analyze-with-path-input:
       # The type of runner that the job will run on

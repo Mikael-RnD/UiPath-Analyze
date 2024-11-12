@@ -166,9 +166,9 @@ runs:
           $errorText = ":x: Error"
 
           $analyzerResult = Get-Content "$($file.FullName)" | ConvertFrom-Json
-          $analyzerResult = $analyzerResult | Sort-Object -Property ErrorSeverity
-          $analyzerTable = "|Severity|ErrorCode|RuleName|Description|Recommendation|DocumentationLink|FilePath|"
-          $analyzerTable += "`n|:--|:--|:--|:--|:--|:--|:--|`n"
+          $analyzerResult = $analyzerResult | Sort-Object -Property ErrorSeverity, FilePath
+          $analyzerTable = "|Severity|ErrorCode/DocumentationLink|RuleName|Description|Recommendation|FilePath|"
+          $analyzerTable += "`n|:--|:--|:--|:--|:--|:--|`n"
           
           for($i = 0; $i -lt $analyzerResult.Length; $i++){
             if($($analyzerResult[$i].ErrorSeverity) -eq "3"){
@@ -201,7 +201,7 @@ runs:
               $recommendation = "$($analyzerResult[$i].Recommendation.Replace([System.Environment]::NewLine, ''))"
             }
 
-            $analyzerTable += "| $severity | $($analyzerResult[$i].ErrorCode) | $($analyzerResult[$i].RuleName) | $description | $recommendation | $($analyzerResult[$i].DocumentationLink) | $($analyzerResult[$i].FilePath) |`n"
+            $analyzerTable += "| $severity | [$($analyzerResult[$i].ErrorCode)]($($analyzerResult[$i].DocumentationLink)) | $($analyzerResult[$i].RuleName) | $description | $recommendation | $($analyzerResult[$i].FilePath) |`n"
           }
           $projectSummary = "`n - ${errorSummary} `n - ${warningSummary} `n - ${infoSummary} `n"
           $analyzerStepSummary += $projectHeader

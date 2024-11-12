@@ -166,7 +166,7 @@ runs:
           $errorText = ":x: Error"
 
           $analyzerResult = Get-Content "$($file.FullName)" | ConvertFrom-Json
-          $analyzerResult = $analyzerResult | Sort-Object -Property ErrorSeverity
+          $analyzerResult = $analyzerResult | Sort-Object -Property ErrorSeverity, FilePath
           $analyzerTable = "|Severity|ErrorCode|RuleName|Description|Recommendation|DocumentationLink|FilePath|"
           $analyzerTable += "`n|:--|:--|:--|:--|:--|:--|:--|`n"
           

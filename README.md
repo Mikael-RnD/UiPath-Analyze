@@ -1,6 +1,6 @@
 # UiPath-Analyze
 
-Runs [workflow analysis](https://docs.uipath.com/studio/standalone/2023.10/user-guide/about-workflow-analyzer) with stopOnRuleViolation enabled for all UiPath projects in a GitHub repository. Built as a wrapper around the UiPath CLI task for [Analyzing a Project](https://docs.uipath.com/test-suite/automation-cloud/latest/user-guide/analyzing-a-project).
+Runs [workflow analysis](https://docs.uipath.com/studio/standalone/2023.10/user-guide/about-workflow-analyzer) with stopOnRuleViolation enabled for all UiPath projects in a GitHub repository. Built as a wrapper around the UiPath CLI task for [Analyzing a Project](https://docs.uipath.com/automation-ops/automation-cloud/latest/user-guide/executing-tasks-cli#analyzing-a-project).
 
 The action adds comments to the GitHub Actions step summary, containing a table of information about the workflow analysis results, and provides the path of a JSON file for workflow analysis results.
 
@@ -11,7 +11,7 @@ The action adds comments to the GitHub Actions step summary, containing a table 
 This action requires the following items to be configured:
 
 - UiPath CLI installed on GitHub Actions Runner. This can be done by running the [setup-uipath action](https://github.com/Mikael-RnD/setup-uipath) before this action
-- [An external application created in Orchestrator](https://docs.uipath.com/automation-cloud/automation-cloud/latest/admin-guide/managing-external-applications) with the access scopes specified in the [UiPath CLI documentation](https://docs.uipath.com/test-suite/automation-cloud/latest/user-guide/executing-tasks-cli). With the credentials passed to this actions input from GitHub Secrets (or other safe credential stores)
+- [An external application created in Orchestrator](https://docs.uipath.com/automation-cloud/automation-cloud/latest/admin-guide/managing-external-applications) with the access scopes specified in the [UiPath CLI documentation](https://docs.uipath.com/automation-ops/automation-cloud/latest/user-guide/executing-tasks-cli#api-access-application-scopes). With the credentials passed to this actions input from GitHub Secrets (or other safe credential stores)
 
 ## Example usage
 

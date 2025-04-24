@@ -15,7 +15,7 @@ inputs:
     description: 'Folder path in modern folder setup'
     required: true
   orchestratorApplicationId:
-    description: 'Orchestrator Application ID for external applicaiton in Orchestrator'
+    description: 'Orchestrator Application ID for external application in Orchestrator'
     required: true
   orchestratorApplicationSecret:
     description: 'Application Secret for external application in Orchestrator'
@@ -57,171 +57,149 @@ runs:
   steps:
     - id: analyze
       name: Analyze
-      shell: powershell
+      shell: bash
       run: |
-        $analysisFailed = 0
-        Remove-Item '${{ github.workspace }}\.github' -Recurse
-        Write-Host 'RulesConfig input: ${{ inputs.rulesConfigFile }}'
-        
-        $RulesConfigPath = Join-Path $env:LOCALAPPDATA -ChildPath "\UiPath\Rules\RuleConfig.json"
-        if(Test-Path $RulesConfigPath)
-        {
-          if([string]::IsNullOrEmpty("${{ inputs.rulesConfigFile }}"))
-          {
-            Write-Host "Custom RulesConfig not provided, using default RulesConfig"
-          }
+        analysisFailed=0
+        rm -rf "${{ github.workspace }}/.github"
+        echo "RulesConfig input: ${{ inputs.rulesConfigFile }}"
+
+        RulesConfigPath="$HOME/.local/share/UiPath/Rules/RuleConfig.json"
+        if [ -f "$RulesConfigPath" ]; then
+          if [ -z "${{ inputs.rulesConfigFile }}" ]; then
+            echo "Custom RulesConfig not provided, using default RulesConfig"
           else
-          {
-            Copy-Item -Path ${{ inputs.rulesConfigFile }} -Destination $RulesConfigPath -Force
-            Write-Host $RulesConfigPath exists: 
-            Test-Path $RulesConfigPath
-          }
-        }
-        if([string]::IsNullOrEmpty("${{ inputs.projectFilePaths }}")) 
-        {
-          Write-Host "Scanning full repository directory for project.json files"
-          $projectJsonFiles = Get-ChildItem -Path ${{ github.workspace }} -Recurse -Filter project.json -File
-        } 
-        else 
-        {
-          Write-Host "Getting full path for files given as inputs"
-          $projectJsonFiles = "${{ inputs.projectFilePaths }}".Trim()
-          $projectJsonFiles = $projectJsonFiles -split "`r`n"
-          $projectJsonFiles | Where { -not  [string]::IsNullOrWhiteSpace($_) } | Get-ChildItem -File
-        }
+            cp "${{ inputs.rulesConfigFile }}" "$RulesConfigPath"
+            echo "$RulesConfigPath exists: $(test -f "$RulesConfigPath" && echo true || echo false)"
+          fi
+        fi
 
-        if([string]::IsNullOrEmpty("${{ inputs.ignoredRules }}")) {
-          Write-Host "No ignored rules provided"
-          $ignoredRulesArg = ""
-        }
-        else {
-          Write-Host "Ignoring rules: ${{ inputs.ignoredRules }}"
-          $ignoredRulesArg = "--ignoredRules=""${{ inputs.ignoredRules }}"""
-          Write-Host $ignoredRulesArg
-        }
+        if [ -z "${{ inputs.projectFilePaths }}" ]; then
+          echo "Scanning full repository directory for project.json files"
+          projectJsonFiles=$(find "${{ github.workspace }}" -type f -name "project.json")
+        else
+          echo "Getting full path for files given as inputs"
+          projectJsonFiles=$(echo "${{ inputs.projectFilePaths }}" | tr '\r\n' '\n' | sed '/^\s*$/d' | while read -r line; do echo "${{ github.workspace }}/$line"; done)
+        fi
 
-        $analyzerResultPath = "${{ github.workspace }}\analyzer-results".Trim()
+        if [ -z "${{ inputs.ignoredRules }}" ]; then
+          echo "No ignored rules provided"
+          ignoredRulesArg=""
+        else
+          echo "Ignoring rules: ${{ inputs.ignoredRules }}"
+          ignoredRulesArg="--ignoredRules=\"${{ inputs.ignoredRules }}\""
+          echo "$ignoredRulesArg"
+        fi
 
-        Write-Output "analyzerResultsPath=$analyzerResultPath" >> $Env:GITHUB_OUTPUT
-        
-        New-Item -ItemType "directory" -Path $analyzerResultPath
+        analyzerResultPath="${{ github.workspace }}/analyzer-results"
+        echo "analyzerResultsPath=$analyzerResultPath" >> "$GITHUB_OUTPUT"
+        mkdir -p "$analyzerResultPath"
 
-        foreach($p in $projectJsonFiles)
-        {
-          Write-Host "Analyzing project: $p"
-          $project = [System.IO.FileInfo]$p
-          $projectInfo = Get-Content "$($project.FullName)" | ConvertFrom-Json
-          $projectName = $projectInfo.name 
-          $analyzerResultFile = "$analyzerResultPath\" + $projectName + ".json"
-          Write-Host "Creating result file $analyzerResultFile"
+        while IFS= read -r p; do 
+          echo "Analyzing project: $p"
+          projectName=$(jq -r '.name' "$p")
+          analyzerResultFile="$analyzerResultPath/$projectName.json"
+          echo "Creating result file $analyzerResultFile"
 
-          uipcli package analyze "$($project.FullName)" `
-            --stopOnRuleViolation `
-            --analyzerTraceLevel "Warning" `
-            --orchestratorUrl "${{ inputs.orchestratorUrl }}" `
-            --orchestratorTenant "${{ inputs.OrchestratorTenant }}" `
-            --orchestratorAccountForApp "${{ inputs.orchestratorLogicalName }}" `
-            --orchestratorApplicationId "${{ inputs.orchestratorApplicationId }}" `
-            --orchestratorApplicationSecret "${{ inputs.orchestratorApplicationSecret }}" `
-            --orchestratorApplicationScope "${{ inputs.orchestratorApplicationScope }}" `
-            --orchestratorFolder "${{ inputs.orchestratorFolder }}" `
-            --resultPath "$analyzerResultFile" `
+          uipcli package analyze "$p" \
+            --stopOnRuleViolation \
+            --analyzerTraceLevel "Warning" \
+            --orchestratorUrl "${{ inputs.orchestratorUrl }}" \
+            --orchestratorTenant "${{ inputs.orchestratorTenant }}" \
+            --orchestratorAccountForApp "${{ inputs.orchestratorLogicalName }}" \
+            --orchestratorApplicationId "${{ inputs.orchestratorApplicationId }}" \
+            --orchestratorApplicationSecret "${{ inputs.orchestratorApplicationSecret }}" \
+            --orchestratorApplicationScope "${{ inputs.orchestratorApplicationScope }}" \
+            --orchestratorFolder "${{ inputs.orchestratorFolder }}" \
+            --resultPath "$analyzerResultFile" \
             $ignoredRulesArg
 
-          Write-Host "Analyzer finished with $projectName"
+          echo "Analyzer finished with $projectName"
 
-          if($LASTEXITCODE -ne 0)
-          {
-            $analysisFailed = 1
-          }
-        }
-        if($analysisFailed -ne 0)
-        {
-          throw "Workflow analysis failed"
-        }
+          if [ $? -ne 0 ]; then
+            analysisFailed=1
+          fi
+        done <<< "$projectJsonFiles"
+
+        if [ $analysisFailed -ne 0 ]; then
+          echo "Workflow analysis failed"
+          exit 1
+        fi
 
     - id: parse
       name: Write Step Summary and Parse Results
       if: always()
-      shell: pwsh
-      run:  |
+      shell: bash
+      run: |
         echo "analyzerResultsPath: ${{ steps.analyze.outputs.analyzerResultsPath }}"
-        $analyzerResultPath = "${{ steps.analyze.outputs.analyzerResultsPath }}"
+        analyzerResultPath="${{ steps.analyze.outputs.analyzerResultsPath }}"
 
-        $analyzerResultFiles = Get-ChildItem $analyzerResultPath
-        $analyzerStepSummary = ""
-        $totalErrorCount = 0
-        $totalWarningCount = 0
-        $totalInfoCount = 0
+        analyzerResultFiles=$(find "$analyzerResultPath" -type f)
+        analyzerStepSummary=""
+        totalErrorCount=0
+        totalWarningCount=0
+        totalInfoCount=0
 
-        foreach($file in $analyzerResultFiles){
-          Write-Host $file.FullName
+        for file in $analyzerResultFiles; do
+          echo "Parsing analyzer results from $file"
+
+          errorCount=0
+          warningCount=0
+          infoCount=0
+
+          infoText=":information_source: Info"
+          warningText=":warning: Warning"
+          errorText=":x: Error"
+
+          analyzerResult=$(jq 'sort_by(.ErrorSeverity, .FilePath)' "$file")
+          analyzerTable="|Severity|ErrorCode/DocumentationLink|RuleName|Description|Recommendation|FilePath|"
+          analyzerTable+="\n|:--|:--|:--|:--|:--|:--|"
+          echo "$analyzerResult"
+
+          echo "$analyzerResult" | jq -c '.[]' > temp_results.json
+          while IFS= read -r result; do
+            severity=""
           
-          $errorCount = 0
-          $warningCount = 0
-          $infoCount = 0
-
-          $infoText = ":information_source: Info"
-          $warningText = ":warning: Warning"
-          $errorText = ":x: Error"
-
-          $analyzerResult = Get-Content "$($file.FullName)" | ConvertFrom-Json
-          $analyzerResult = $analyzerResult | Sort-Object -Property ErrorSeverity, FilePath
-          $analyzerTable = "|Severity|ErrorCode/DocumentationLink|RuleName|Description|Recommendation|FilePath|"
-          $analyzerTable += "`n|:--|:--|:--|:--|:--|:--|`n"
+            # Extract ErrorSeverity from the current object
+            errorSeverity=$(echo "$result" | jq -r '.ErrorSeverity')
           
-          for($i = 0; $i -lt $analyzerResult.Length; $i++){
-            if($($analyzerResult[$i].ErrorSeverity) -eq "3"){
-              $severity = $infoText
-              $infoCount++
-            }
-            if($($analyzerResult[$i].ErrorSeverity) -eq "2"){
-              $severity = $warningText
-              $warningCount++
-            }
-            if($($analyzerResult[$i].ErrorSeverity) -eq "1"){
-              $severity = $errorText
-              $errorCount++
-            }
+            # Ensure ErrorSeverity is valid
+            if [ "$errorSeverity" -eq 3 ]; then
+              severity="$infoText"
+              infoCount=$((infoCount + 1))
+            elif [ "$errorSeverity" -eq 2 ]; then
+              severity="$warningText"
+              warningCount=$((warningCount + 1))
+            elif [ "$errorSeverity" -eq 1 ]; then
+              severity="$errorText"
+              errorCount=$((errorCount + 1))
+            fi
+          
+            description=$(echo "$result" | jq -r '.Description // ""' | tr '\n' ' ')
+            recommendation=$(echo "$result" | jq -r '.Recommendation // ""' | tr '\n' ' ')
+            analyzerTable+="\n| $severity | [$(echo "$result" | jq -r '.ErrorCode // ""')]($(echo "$result" | jq -r '.DocumentationLink // ""')) | $(echo "$result" | jq -r '.RuleName // ""') | $description | $recommendation | $(echo "$result" | jq -r '.FilePath // ""') |"
 
-            $infoSummary = "${infoText}: ${infoCount}"
-            $warningSummary = "${warningText}: ${warningCount}"
-            $errorSummary = "${errorText}: ${errorCount}"
+            echo "Current table: $analyzerTable"
+          done < temp_results.json
+          rm temp_results.json
 
-            $projectName = [System.IO.Path]::GetFileNameWithoutExtension($file.FullName)
-            $projectHeader = "`n<details>"
-            $projectHeader += "`n<summary>${projectName} -- ${errorSummary} -- ${warningSummary} -- ${infoSummary}</summary>`n"
+          projectName=$(basename "$file" .json)
+          projectSummary="\n - ${errorText}: $errorCount \n - ${warningText}: $warningCount \n - ${infoText}: $infoCount \n"
+          analyzerStepSummary+="\n<details>\n<summary>${projectName} -- ${errorText}: $errorCount -- ${warningText}: $warningCount -- ${infoText}: $infoCount</summary>\n"
+          analyzerStepSummary+="$projectSummary\n$analyzerTable\n</details>\n"
 
-            $description = "$($analyzerResult[$i].Description.Replace([System.Environment]::NewLine, ''))"
-            
-            if([string]::IsNullOrEmpty($($analyzerResult[$i].Recommendation))){
-              $recommendation = ""
-            }
-            else{
-              $recommendation = "$($analyzerResult[$i].Recommendation.Replace([System.Environment]::NewLine, ''))"
-            }
+          totalErrorCount=$((totalErrorCount + errorCount))
+          totalWarningCount=$((totalWarningCount + warningCount))
+          totalInfoCount=$((totalInfoCount + infoCount))
+        done
 
-            $analyzerTable += "| $severity | [$($analyzerResult[$i].ErrorCode)]($($analyzerResult[$i].DocumentationLink)) | $($analyzerResult[$i].RuleName) | $description | $recommendation | $($analyzerResult[$i].FilePath) |`n"
-          }
-          $projectSummary = "`n - ${errorSummary} `n - ${warningSummary} `n - ${infoSummary} `n"
-          $analyzerStepSummary += $projectHeader
-          $analyzerStepSummary += $projectSummary  
-          $analyzerStepSummary += "`n$analyzerTable"
-          $analyzerStepSummary += "`n</details>`n"
+        echo "analyzerResultsTable<<EOF" >> "$GITHUB_OUTPUT"
+        echo -e "$analyzerStepSummary" >> "$GITHUB_OUTPUT"
+        echo "EOF" >> "$GITHUB_OUTPUT"
 
-          $totalErrorCount += $errorCount
-          $totalWarningCount += $warningCount
-          $totalInfoCount += $infoCount
-        }
+        echo "## Workflow Analysis Results" >> "$GITHUB_STEP_SUMMARY"
+        echo "" >> "$GITHUB_STEP_SUMMARY"
+        echo -e "$analyzerStepSummary" >> "$GITHUB_STEP_SUMMARY"
 
-        echo 'analyzerResultsTable<<EOF' >> $Env:GITHUB_OUTPUT
-        echo $analyzerStepSummary.Trim() >> $Env:GITHUB_OUTPUT
-        echo EOF >> $Env:GITHUB_OUTPUT
-
-        echo "## Workflow Analysis Results" >> $Env:GITHUB_STEP_SUMMARY
-        echo "" >> $Env:GITHUB_STEP_SUMMARY
-        echo "$analyzerStepSummary" >> $Env:GITHUB_STEP_SUMMARY
-
-        echo "errorCount=$totalErrorCount" >> $Env:GITHUB_OUTPUT
-        echo "warningCount=$totalWarningCount" >> $Env:GITHUB_OUTPUT
-        echo "infoCount=$totalInfoCount" >> $Env:GITHUB_OUTPUT
+        echo "errorCount=$totalErrorCount" >> "$GITHUB_OUTPUT"
+        echo "warningCount=$totalWarningCount" >> "$GITHUB_OUTPUT"
+        echo "infoCount=$totalInfoCount" >> "$GITHUB_OUTPUT"

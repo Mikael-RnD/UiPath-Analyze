@@ -195,6 +195,7 @@ runs:
           totalErrorCount=$((totalErrorCount + errorCount))
           totalWarningCount=$((totalWarningCount + warningCount))
           totalInfoCount=$((totalInfoCount + infoCount))
+          echo ""
         done
 
         echo "analyzerResultsTable<<EOF" >> "$GITHUB_OUTPUT"

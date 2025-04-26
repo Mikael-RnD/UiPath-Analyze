@@ -133,10 +133,7 @@ runs:
         echo "analyzerResultsPath: ${{ steps.analyze.outputs.analyzerResultsPath }}"
         analyzerResultPath="${{ steps.analyze.outputs.analyzerResultsPath }}"
 
-        find "$analyzerResultPath" -type f | while IFS= read -r file; do
-          analyzerResultFiles+=("$file")
-        done
-        
+        analyzerResultFiles=$(find "$analyzerResultPath" -type f)
         analyzerStepSummary=""
         totalErrorCount=0
         totalWarningCount=0

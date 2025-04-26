@@ -156,13 +156,15 @@ runs:
           echo "$analyzerResult"
 
           echo "$analyzerResult" | jq -c '.[]' > temp_results.json
+          if [ "${{ contains(runner.os, 'windows') }}" = "true" ]; then
+            echo "Normalizing newlines for Windows"
+            dos2unix temp_results.json  # Normalize newlines
+          fi
+          
           while IFS= read -r result; do
             severity=""
-          
-            # Extract ErrorSeverity from the current object
             errorSeverity=$(echo "$result" | jq -r '.ErrorSeverity')
-          
-            # Ensure ErrorSeverity is valid
+
             if [ "$errorSeverity" -eq 3 ]; then
               severity="$infoText"
               infoCount=$((infoCount + 1))
@@ -173,12 +175,10 @@ runs:
               severity="$errorText"
               errorCount=$((errorCount + 1))
             fi
-          
-            description=$(echo "$result" | jq -r '.Description // ""' | tr '\n' ' ')
-            recommendation=$(echo "$result" | jq -r '.Recommendation // ""' | tr '\n' ' ')
-            analyzerTable+="\n| $severity | [$(echo "$result" | jq -r '.ErrorCode // ""')]($(echo "$result" | jq -r '.DocumentationLink // ""')) | $(echo "$result" | jq -r '.RuleName // ""') | $description | $recommendation | $(echo "$result" | jq -r '.FilePath // ""') |"
 
-            echo "Current table: $analyzerTable"
+            description=$(echo "$result" | jq -r '.Description // ""' | tr '\r\n' ' ')
+            recommendation=$(echo "$result" | jq -r '.Recommendation // ""' | tr '\r\n' ' ')
+            analyzerTable+="\n| $severity | [$(echo "$result" | jq -r '.ErrorCode // ""')]($(echo "$result" | jq -r '.DocumentationLink // ""')) | $(echo "$result" | jq -r '.RuleName // ""') | $description | $recommendation | $(echo "$result" | jq -r '.FilePath // ""') |"
           done < temp_results.json
           rm temp_results.json
 

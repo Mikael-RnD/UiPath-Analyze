@@ -4,8 +4,6 @@ Runs [workflow analysis](https://docs.uipath.com/studio/standalone/2023.10/user-
 
 The action adds comments to the GitHub Actions step summary, containing a table of information about the workflow analysis results, and provides the path of a JSON file for workflow analysis results.
 
-**Note:** The current version of this action is only compatible with Windows runners
-
 ## Setup
 
 This action requires the following items to be configured:

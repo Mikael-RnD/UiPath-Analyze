@@ -20,7 +20,7 @@ The example below shows a standard use-case for running workflow analysis on all
 ```yml
       # Action for performing workflow analysis on a UiPath project
       - name: UiPath Analyze
-        uses: Mikael-RnD/UiPath-Analyze@v0
+        uses: Mikael-RnD/UiPath-Analyze@v1
         with:
           orchestratorTenant: MyTenant
           orchestratorFolder: "MyFolder/SE"
@@ -36,7 +36,7 @@ The example below shows a use-case for running workflow analysis, on a specific 
 ```yml
       # Action for performing workflow analysis on a UiPath project
       - name: UiPath Analyze
-        uses: Mikael-RnD/UiPath-Analyze@v0
+        uses: Mikael-RnD/UiPath-Analyze@v1
         with:
           projectFilePaths: |
             Performer/project.json

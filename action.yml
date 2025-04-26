@@ -133,13 +133,18 @@ runs:
         echo "analyzerResultsPath: ${{ steps.analyze.outputs.analyzerResultsPath }}"
         analyzerResultPath="${{ steps.analyze.outputs.analyzerResultsPath }}"
 
-        analyzerResultFiles=$(find "$analyzerResultPath" -type f)
+        # Handle file paths with spaces correctly
+        analyzerResultFiles=()
+        while IFS= read -r file; do
+          analyzerResultFiles+=("$file")
+        done < <(find "$analyzerResultPath" -type f)
+
         analyzerStepSummary=""
         totalErrorCount=0
         totalWarningCount=0
         totalInfoCount=0
 
-        for file in $analyzerResultFiles; do
+        for file in "${analyzerResultFiles[@]}"; do
           echo "Parsing analyzer results from $file"
 
           errorCount=0
@@ -190,6 +195,7 @@ runs:
           totalErrorCount=$((totalErrorCount + errorCount))
           totalWarningCount=$((totalWarningCount + warningCount))
           totalInfoCount=$((totalInfoCount + infoCount))
+          echo ""
         done
 
         echo "analyzerResultsTable<<EOF" >> "$GITHUB_OUTPUT"

@@ -54,9 +54,9 @@ outputs:
 
 runs:
   using: "composite"
-  shell: bash
   steps:
     - id: parse-ignore-rules
+      shell: bash
       run: |
         if [ -z "${{ inputs.ignoredRules }}" ]; then
           echo "No ignored rules provided"

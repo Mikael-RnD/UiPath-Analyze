@@ -54,7 +54,17 @@ outputs:
 
 runs:
   using: "composite"
+  shell: bash
   steps:
+    - id: parse-ignore-rules
+      run: |
+        if [ -z "${{ inputs.ignoredRules }}" ]; then
+          echo "No ignored rules provided"
+        else
+          echo "Ignoring rules: ${{ inputs.ignoredRules }}"
+          echo "ignoredRules=--ignoredRules "${{ inputs.ignoredRules }}"" >> $GITHUB_OUTPUT
+        fi
+  
     - id: analyze
       name: Analyze
       shell: bash
@@ -81,15 +91,6 @@ runs:
           projectJsonFiles=$(echo "${{ inputs.projectFilePaths }}" | tr '\r\n' '\n' | sed '/^\s*$/d' | while read -r line; do echo "${{ github.workspace }}/$line"; done)
         fi
 
-        if [ -z "${{ inputs.ignoredRules }}" ]; then
-          echo "No ignored rules provided"
-          ignoredRulesArg=""
-        else
-          echo "Ignoring rules: ${{ inputs.ignoredRules }}"
-          ignoredRulesArg="--ignoredRules=\"${{ inputs.ignoredRules }}\""
-          echo "$ignoredRulesArg"
-        fi
-
         analyzerResultPath="${{ github.workspace }}/analyzer-results"
         echo "analyzerResultsPath=$analyzerResultPath" >> "$GITHUB_OUTPUT"
         mkdir -p "$analyzerResultPath"
@@ -111,7 +112,7 @@ runs:
             --orchestratorApplicationScope "${{ inputs.orchestratorApplicationScope }}" \
             --orchestratorFolder "${{ inputs.orchestratorFolder }}" \
             --resultPath "$analyzerResultFile" \
-            $ignoredRulesArg
+            ${{ steps.parse-ignore-rules.outputs.ignoredRules }}
 
           echo "Analyzer finished with $projectName"
 

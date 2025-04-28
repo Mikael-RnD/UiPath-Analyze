@@ -2,7 +2,7 @@
 
 name: CI
 
-# Controls when the workflow will run
+# Controls when the workflow will run 
 on:
   # Triggers the workflow on push or pull request events but only for the main branch
   push:
@@ -14,6 +14,30 @@ on:
   workflow_dispatch:
 
 jobs:
+  analyze-with-ignored-rules:
+    # The type of runner that the job will run on
+    runs-on: windows-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v4
+
+      - uses: Mikael-RnD/setup-uipath@v2
+      
+      - name: 'Analyze with RuleConfig.json input'
+        id: analyze
+        uses: ./
+        with:
+          orchestratorUrl: "https://cloud.uipath.com/"
+          orchestratorTenant: ${{ secrets.UIPATH_TENANT }}
+          orchestratorFolder: Shared
+          orchestratorApplicationId: ${{ secrets.UIPATH_APP_ID }}
+          orchestratorApplicationSecret: ${{ secrets.UIPATH_APP_SECRET }}
+          orchestratorApplicationScope: ${{ secrets.UIPATH_APP_SCOPE }} 
+          orchestratorLogicalName: ${{ secrets.UIPATH_ORGANIZATION_ID }}
+          ignoredRules: ST-USG-010
+          
   # This workflow contains a single job called "build"
   analyze-with-rules-config:
     # The type of runner that the job will run on

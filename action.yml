@@ -147,7 +147,7 @@ runs:
         totalInfoCount=0
 
         for file in "${analyzerResultFiles[@]}"; do
-          echo "::group::$(basename "$file" .json)"
+          echo "::group::Analysis results for $(basename "$file" .json)"
 
           errorCount=0
           warningCount=0

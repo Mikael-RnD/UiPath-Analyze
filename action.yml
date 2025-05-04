@@ -56,6 +56,7 @@ runs:
   using: "composite"
   steps:
     - id: parse-ignore-rules
+      name: Check for ignored rules
       shell: bash
       run: |
         if [ -z "${{ inputs.ignoredRules }}" ]; then
@@ -71,7 +72,6 @@ runs:
       run: |
         analysisFailed=0
         rm -rf "${{ github.workspace }}/.github"
-        echo "RulesConfig input: ${{ inputs.rulesConfigFile }}"
 
         RulesConfigPath="$HOME/.local/share/UiPath/Rules/RuleConfig.json"
         if [ -f "$RulesConfigPath" ]; then
@@ -132,7 +132,6 @@ runs:
       if: always()
       shell: bash
       run: |
-        echo "analyzerResultsPath: ${{ steps.analyze.outputs.analyzerResultsPath }}"
         analyzerResultPath="${{ steps.analyze.outputs.analyzerResultsPath }}"
 
         # Handle file paths with spaces correctly

@@ -56,6 +56,7 @@ runs:
   using: "composite"
   steps:
     - id: parse-ignore-rules
+      name: Check for ignored rules
       shell: bash
       run: |
         if [ -z "${{ inputs.ignoredRules }}" ]; then
@@ -71,7 +72,6 @@ runs:
       run: |
         analysisFailed=0
         rm -rf "${{ github.workspace }}/.github"
-        echo "RulesConfig input: ${{ inputs.rulesConfigFile }}"
 
         RulesConfigPath="$HOME/.local/share/UiPath/Rules/RuleConfig.json"
         if [ -f "$RulesConfigPath" ]; then
@@ -96,8 +96,8 @@ runs:
         mkdir -p "$analyzerResultPath"
 
         while IFS= read -r p; do 
-          echo "Analyzing project: $p"
           projectName=$(jq -r '.name' "$p")
+          echo "::group::uipcli output for $projectName"
           analyzerResultFile="$analyzerResultPath/$projectName.json"
           echo "Creating result file $analyzerResultFile"
 
@@ -119,6 +119,7 @@ runs:
           if [ $? -ne 0 ]; then
             analysisFailed=1
           fi
+          echo "::endgroup::"
         done <<< "$projectJsonFiles"
 
         if [ $analysisFailed -ne 0 ]; then
@@ -131,7 +132,6 @@ runs:
       if: always()
       shell: bash
       run: |
-        echo "analyzerResultsPath: ${{ steps.analyze.outputs.analyzerResultsPath }}"
         analyzerResultPath="${{ steps.analyze.outputs.analyzerResultsPath }}"
 
         # Handle file paths with spaces correctly
@@ -146,7 +146,7 @@ runs:
         totalInfoCount=0
 
         for file in "${analyzerResultFiles[@]}"; do
-          echo "Parsing analyzer results from $file"
+          echo "::group::Analysis results for $(basename "$file" .json)"
 
           errorCount=0
           warningCount=0
@@ -198,7 +198,7 @@ runs:
           totalErrorCount=$((totalErrorCount + errorCount))
           totalWarningCount=$((totalWarningCount + warningCount))
           totalInfoCount=$((totalInfoCount + infoCount))
-          echo ""
+          echo "::endgroup::"
         done
 
         echo "analyzerResultsTable<<EOF" >> "$GITHUB_OUTPUT"

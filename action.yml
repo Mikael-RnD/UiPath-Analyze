@@ -184,8 +184,7 @@ runs:
 
             description=$(echo "$result" | jq -r '.Description // ""' | tr '\r\n' ' ')
             recommendation=$(echo "$result" | jq -r '.Recommendation // ""' | tr '\r\n' ' ')
-            filePath=$(echo "$result" | jq -r '.FilePath // ""' | tr -d '\r\n' | sed 's/[[:space:]]\+/ /g')
-
+            filePath=$(echo "$result" | jq -r '.FilePath // ""' | tr -d '\r\n' | sed 's|\\|/|g' | sed "s|$(echo $GITHUB_WORKSPACE | sed 's|\\|/|g')/||" | sed 's/[[:space:]]\+/ /g')
 
             analyzerTable+="\n| $severity | [$(echo "$result" | jq -r '.ErrorCode // ""')]($(echo "$result" | jq -r '.DocumentationLink // ""')) | $(echo "$result" | jq -r '.RuleName // ""') | $description | $recommendation | $filePath |"
           done < temp_results.json

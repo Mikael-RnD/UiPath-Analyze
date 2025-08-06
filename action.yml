@@ -157,39 +157,35 @@ runs:
           warningText=":warning: Warning"
           errorText=":x: Error"
 
-          analyzerResult=$(jq 'sort_by(.ErrorSeverity, .FilePath)' "$file")
+          # Create table header
           analyzerTable="|Severity|ErrorCode/DocumentationLink|RuleName|Description|Recommendation|FilePath|"
           analyzerTable+="\n|:--|:--|:--|:--|:--|:--|"
-          echo "$analyzerResult"
 
-          echo "$analyzerResult" | jq -c '.[]' > temp_results.json
-          if [ "${{ contains(runner.os, 'windows') }}" = "true" ]; then
-            echo "Normalizing newlines for Windows"
-            dos2unix temp_results.json  # Normalize newlines
-          fi
-          
-          while IFS= read -r result; do
-            severity=""
-            errorSeverity=$(echo "$result" | jq -r '.ErrorSeverity')
+          # Process each result using jq to handle formatting properly
+          while read -r result; do
+            # Skip empty lines
+            [ -z "$result" ] && continue
+            
+            # Extract fields safely with jq, handling newlines and special characters
+            errorSeverity=$(echo "$result" | jq -r '.ErrorSeverity // 0')
+            errorCode=$(echo "$result" | jq -r '.ErrorCode // ""')
+            docLink=$(echo "$result" | jq -r '.DocumentationLink // ""')
+            ruleName=$(echo "$result" | jq -r '.RuleName // ""')
+            description=$(echo "$result" | jq -r '.Description // ""' | tr '\n\r' '  ' | sed 's/[[:space:]]\+/ /g' | sed 's/^ *//;s/ *$//')
+            recommendation=$(echo "$result" | jq -r '.Recommendation // ""' | tr '\n\r' '  ' | sed 's/[[:space:]]\+/ /g' | sed 's/^ *//;s/ *$//')
+            filePath=$(echo "$result" | jq -r '.FilePath // ""' | sed 's|\\|/|g' | sed "s|${GITHUB_WORKSPACE//\\//}/*||" | sed 's/[[:space:]]\+/ /g')
 
-            if [ "$errorSeverity" -eq 3 ]; then
-              severity="$infoText"
-              infoCount=$((infoCount + 1))
-            elif [ "$errorSeverity" -eq 2 ]; then
-              severity="$warningText"
-              warningCount=$((warningCount + 1))
-            elif [ "$errorSeverity" -eq 1 ]; then
-              severity="$errorText"
-              errorCount=$((errorCount + 1))
-            fi
+            # Determine severity and count
+            case "$errorSeverity" in
+              3) severity="$infoText"; infoCount=$((infoCount + 1)) ;;
+              2) severity="$warningText"; warningCount=$((warningCount + 1)) ;;
+              1) severity="$errorText"; errorCount=$((errorCount + 1)) ;;
+              *) severity=""; ;;
+            esac
 
-            description=$(echo "$result" | jq -r '.Description // ""' | tr '\r\n' ' ')
-            recommendation=$(echo "$result" | jq -r '.Recommendation // ""' | tr '\r\n' ' ')
-            filePath=$(echo "$result" | jq -r '.FilePath // ""' | tr -d '\r\n' | sed 's|\\|/|g' | sed "s|$(echo $GITHUB_WORKSPACE | sed 's|\\|/|g')/||" | sed 's/[[:space:]]\+/ /g')
-
-            analyzerTable+="\n| $severity | [$(echo "$result" | jq -r '.ErrorCode // ""')]($(echo "$result" | jq -r '.DocumentationLink // ""')) | $(echo "$result" | jq -r '.RuleName // ""') | $description | $recommendation | $filePath |"
-          done < temp_results.json
-          rm temp_results.json
+            # Build table row
+            analyzerTable+="\n| $severity | [$errorCode]($docLink) | $ruleName | $description | $recommendation | $filePath |"
+          done < <(jq -c 'sort_by(.ErrorSeverity, .FilePath) | .[]' "$file")
 
           projectName=$(basename "$file" .json)
           projectSummary="\n - ${errorText}: $errorCount \n - ${warningText}: $warningCount \n - ${infoText}: $infoCount \n"

@@ -55,16 +55,31 @@ outputs:
 runs:
   using: "composite"
   steps:
-    - id: parse-ignore-rules
-      name: Check for ignored rules
+    - id: setup-additional-arguments
+      name: Setup Additional Arguments
       shell: bash
       run: |
-        if [ -z "${{ inputs.ignoredRules }}" ]; then
-          echo "No ignored rules provided"
-        else
+        additionalArguments=""
+        
+        if [ -n "${{ inputs.ignoredRules }}" ]; then
           echo "Ignoring rules: ${{ inputs.ignoredRules }}"
-          echo "ignoredRules=--ignoredRules "${{ inputs.ignoredRules }}"" >> $GITHUB_OUTPUT
+          additionalArguments="--ignoredRules ${{ inputs.ignoredRules }}"
+        else
+          echo "No ignored rules provided"
         fi
+
+        if [ -n "${{ inputs.rulesConfigFile }}" ]; then
+          echo "Using governance file: ${{ inputs.rulesConfigFile }}"
+          if [ -n "$additionalArguments" ]; then
+            additionalArguments="$additionalArguments --governanceFilePath \"${{ inputs.rulesConfigFile }}\""
+          else
+            additionalArguments="--governanceFilePath \"${{ github.workspace }}/${{ inputs.rulesConfigFile }}\""
+          fi
+        else
+          echo "No governance file provided, using default governance"
+        fi
+        
+        echo "additionalArguments=$additionalArguments" >> "$GITHUB_OUTPUT"
   
     - id: analyze
       name: Analyze
@@ -72,16 +87,6 @@ runs:
       run: |
         analysisFailed=0
         rm -rf "${{ github.workspace }}/.github"
-
-        RulesConfigPath="$HOME/.local/share/UiPath/Rules/RuleConfig.json"
-        if [ -f "$RulesConfigPath" ]; then
-          if [ -z "${{ inputs.rulesConfigFile }}" ]; then
-            echo "Custom RulesConfig not provided, using default RulesConfig"
-          else
-            cp "${{ inputs.rulesConfigFile }}" "$RulesConfigPath"
-            echo "$RulesConfigPath exists: $(test -f "$RulesConfigPath" && echo true || echo false)"
-          fi
-        fi
 
         if [ -z "${{ inputs.projectFilePaths }}" ]; then
           echo "Scanning full repository directory for project.json files"
@@ -113,7 +118,7 @@ runs:
             --orchestratorFolder "${{ inputs.orchestratorFolder }}" \
             --resultPath "$analyzerResultFile" \
             --traceLevel "Warning" \
-            ${{ steps.parse-ignore-rules.outputs.ignoredRules }}
+            ${{ steps.setup-additional-arguments.outputs.additionalArguments }}
 
           echo "Analyzer finished with $projectName"
 

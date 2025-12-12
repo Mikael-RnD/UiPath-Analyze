@@ -73,7 +73,7 @@ runs:
           if [ -n "$additionalArguments" ]; then
             additionalArguments="$additionalArguments --governanceFilePath \"${{ inputs.rulesConfigFile }}\""
           else
-            additionalArguments="--governanceFilePath \"${{ github.workspace }}/${{ inputs.rulesConfigFile }}\""
+            additionalArguments="--governanceFilePath \"${{ inputs.rulesConfigFile }}\""
           fi
         else
           echo "No governance file provided, using default governance"

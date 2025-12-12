@@ -59,22 +59,22 @@ runs:
       name: Setup Additional Arguments
       shell: bash
       run: |
-        additionalArguments=""
-        if [ -z "${{ inputs.ignoredRules }}" ]; then
-          echo "No ignored rules provided"
-        else
+        args=()
+        if [ -n "${{ inputs.ignoredRules }}" ]; then
           echo "Ignoring rules: ${{ inputs.ignoredRules }}"
-          additionalArguments="--ignoredRules ${{ inputs.ignoredRules }}"
+          args+=(--ignoredRules "${{ inputs.ignoredRules }}")
+        else
+          echo "No ignored rules provided"
         fi
 
-        if [ -z "${{ inputs.rulesConfigFile }}" ]; then
-          echo "No governance file provided, using default governance"
-        else
+        if [ -n "${{ inputs.rulesConfigFile }}" ]; then
           echo "Using governance file: ${{ inputs.rulesConfigFile }}"
-          additionalArguments="$additionalArguments --governanceFilePath "${{ inputs.rulesConfigFile }}""
+          args+=(--governanceFilePath "${{ inputs.rulesConfigFile }}")
+        else
+          echo "No governance file provided, using default governance"
         fi
-        additionalArguments=$(echo "$additionalArguments" | xargs)
-        echo "additionalArguments=$additionalArguments" >> "$GITHUB_OUTPUT"
+        
+        echo "additionalArguments=${args[*]}" >> "$GITHUB_OUTPUT"
   
     - id: analyze
       name: Analyze

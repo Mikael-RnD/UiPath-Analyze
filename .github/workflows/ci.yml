@@ -39,7 +39,7 @@ jobs:
           orchestratorApplicationSecret: ${{ secrets.UIPATH_APP_SECRET }}
           orchestratorApplicationScope: ${{ secrets.UIPATH_APP_SCOPE }} 
           orchestratorLogicalName: ${{ secrets.UIPATH_ORGANIZATION_ID }}
-          rulesConfigFile: 'analyzer-policy.json'
+          rulesConfigFile: './analyzer-policy.json'
 
       - if: always()
         uses: actions/upload-artifact@v4

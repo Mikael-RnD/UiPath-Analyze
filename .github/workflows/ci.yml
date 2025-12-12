@@ -26,7 +26,7 @@ jobs:
 
       - uses: Mikael-RnD/setup-uipath@v2
       
-      - name: 'Analyze with RuleConfig.json input'
+      - name: 'Analyze with rulesConfigFile input'
         id: analyze
         uses: ./
         with:
@@ -37,7 +37,7 @@ jobs:
           orchestratorApplicationSecret: ${{ secrets.UIPATH_APP_SECRET }}
           orchestratorApplicationScope: ${{ secrets.UIPATH_APP_SCOPE }} 
           orchestratorLogicalName: ${{ secrets.UIPATH_ORGANIZATION_ID }}
-          rulesConfigFile: 'RulesConfig.json'
+          rulesConfigFile: 'analyzer-policy.json'
 
       - if: always()
         uses: actions/upload-artifact@v4

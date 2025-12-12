@@ -25,7 +25,9 @@ jobs:
       - uses: actions/checkout@v4
 
       - uses: Mikael-RnD/setup-uipath@v2
-      
+        with:
+          platform-version: '25.4'
+
       - name: 'Analyze with rulesConfigFile input'
         id: analyze
         uses: ./
@@ -55,6 +57,8 @@ jobs:
       - uses: actions/checkout@v4
       
       - uses: Mikael-RnD/setup-uipath@v2
+        with:
+          platform-version: '25.4'
 
       - id: analyze
         name: Analyse with ignored rules

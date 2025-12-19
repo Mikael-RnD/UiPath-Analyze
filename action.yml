@@ -154,6 +154,8 @@ runs:
         for file in "${analyzerResultFiles[@]}"; do
           echo "::group::Analysis results for $(basename "$file" .json)"
 
+          cat "$file"
+
           errorCount=0
           warningCount=0
           infoCount=0

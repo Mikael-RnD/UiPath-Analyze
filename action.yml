@@ -35,6 +35,10 @@ inputs:
     description: 'Comma-separated list of rules to ignore during analysis'
     required: false
     default: ""
+  traceLevel:
+    description: 'Trace level for the analyzer output, can be set to Verbose, Information, Warning, Error. Default is Warning'
+    required: false
+    default: "Warning"
 outputs:
   analyzerResultsPath:
     description: 'Folder containing the workflow analysis result files in json format, intended for use cases such as uploading to artifact for review'
@@ -117,7 +121,7 @@ runs:
             --orchestratorApplicationScope "${{ inputs.orchestratorApplicationScope }}" \
             --orchestratorFolder "${{ inputs.orchestratorFolder }}" \
             --resultPath "$analyzerResultFile" \
-            --traceLevel "Warning" \
+            --traceLevel "${{ inputs.traceLevel }}" \
             ${{ steps.setup-additional-arguments.outputs.additionalArguments }}
 
           echo "Analyzer finished with $projectName"

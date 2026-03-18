@@ -164,9 +164,9 @@ runs:
           warningCount=0
           infoCount=0
 
-          infoText=":information_source: Info"
-          warningText=":warning: Warning"
-          errorText=":x: Error"
+          infoText="ℹ️ Info"
+          warningText="⚠️ Warning"
+          errorText="❌ Error"
 
           # Create table header
           analyzerTable="|Severity|ErrorCode/DocumentationLink|RuleName|Description|Recommendation|FilePath|"
